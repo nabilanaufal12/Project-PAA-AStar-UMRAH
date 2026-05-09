@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulasi A* Governors Island</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero hero-simple">
+    <div>
+      <h1>Analisis Efisiensi Algoritma A-Star (A*)</h1>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel controls">
+      <h2>Kontrol Simulasi</h2>
+
+      <label for="gridSize">Ukuran Pengujian Internal</label>
+      <select id="gridSize">
+        <option value="10">10 × 10</option>
+        <option value="20" selected>20 × 20</option>
+        <option value="30">30 × 30</option>
+      </select>
+
+      <label for="heuristic">Heuristik</label>
+      <select id="heuristic">
+        <option value="manhattan">Manhattan Distance</option>
+        <option value="chebyshev">Chebyshev Distance</option>
+        <option value="euclidean" selected>Euclidean Distance</option>
+      </select>
+
+      <div class="button-grid">
+        <button id="runBtn" class="primary">Jalankan A*</button>
+        <button id="resetBtn">Reset</button>
+        <button id="randomNodeBtn">Acak Start & Goal</button>
+        <button id="randomObstacleBtn">Acak Obstacle</button>
+        <button id="compareBtn" class="wide">Bandingkan Heuristik</button>
+      </div>
+
+      <div class="legend-box">
+        <div class="legend-item">
+          <span class="dot start"></span>
+          <span>Start Node</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot goal"></span>
+          <span>Goal Node</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot visited"></span>
+          <span>Node diekspansi</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot route"></span>
+          <span>Rute final A*</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="map-shell clean-map">
+      <canvas id="mapCanvas" aria-label="Peta simulasi A-Star"></canvas>
+    </section>
+
+    <section class="panel metrics">
+      <h2>Metrik Hasil</h2>
+
+      <div class="metric-list">
+        <div class="metric">
+          <span>Waktu Eksekusi</span>
+          <strong id="timeMetric">-</strong>
+        </div>
+
+        <div class="metric">
+          <span>Node Diekspansi</span>
+          <strong id="expandedMetric">-</strong>
+        </div>
+
+        <div class="metric">
+          <span>Panjang Rute</span>
+          <strong id="distanceMetric">-</strong>
+        </div>
+
+        <div class="metric">
+          <span>Jumlah Langkah</span>
+          <strong id="stepsMetric">-</strong>
+        </div>
+
+        <div class="metric metric-status">
+          <span>Status</span>
+          <div class="status-wrap">
+            <strong id="statusMetric">Belum dijalankan</strong>
+            <small id="reasonMetric" class="reason-text">-</small>
+          </div>
+        </div>
+      </div>
+
+      <h3>Perbandingan Heuristik</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Heuristik</th>
+              <th>Waktu</th>
+              <th>Node</th>
+              <th>Rute</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody">
+            <tr><td colspan="5">Klik “Bandingkan Heuristik”.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="graph.js"></script>
+  <script src="astar.js"></script>
+  <script src="map.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
