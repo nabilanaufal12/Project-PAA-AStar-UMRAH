@@ -75,3 +75,39 @@
     }
     return path;
   }
+
+  // 1. Fungsi Kalkulasi Heuristik (The Greedy Component)
+  // Menghitung perkiraan jarak tersisa dari node saat ini ke tujuan
+  function heuristicDistance(a, b, type) {
+    const dx = Math.abs(a.x - b.x);
+    const dy = Math.abs(a.y - b.y);
+
+    // Manhattan: Cocok untuk pergerakan grid 4 arah (horizontal/vertikal)
+    if (type === "manhattan") return dx + dy;
+    
+    // Chebyshev: Cocok jika pergerakan diagonal biayanya sama dengan lurus
+    if (type === "chebyshev") return Math.max(dx, dy);
+    
+    // Euclidean (Default): Jarak garis lurus nyata (Pythagoras)
+    return Math.sqrt(dx * dx + dy * dy); 
+  }
+
+  // 2. Fungsi Pengambilan Keputusan (Greedy Choice)
+  // Mengambil node dengan nilai f-score paling kecil dari Open List
+  function extractLowest(open, fScore) {
+    let bestIndex = 0;
+    let bestValue = fScore.get(open[0]) ?? Infinity;
+
+    for (let i = 1; i < open.length; i += 1) {
+      const score = fScore.get(open[i]) ?? Infinity;
+      // Selalu "rakus" (greedy) mengambil nilai terendah
+      if (score < bestValue) {
+        bestValue = score;
+        bestIndex = i;
+      }
+    }
+
+    // Mengeluarkan node terbaik dari array open list dan mengembalikannya
+    const [bestId] = open.splice(bestIndex, 1);
+    return bestId;
+  }
