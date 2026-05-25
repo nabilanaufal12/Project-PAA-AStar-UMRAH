@@ -1,18 +1,68 @@
-// astar.js - Bagian Kontribusi Anggota 2 (Nabil)
+(function () {
+  "use strict";
+
+  function heuristicDistance(a, b, type) {
+    const dx = Math.abs(a.x - b.x);
+    const dy = Math.abs(a.y - b.y);
+
+    if (type === "manhattan") return dx + dy;
+    if (type === "chebyshev") return Math.max(dx, dy);
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function edgeAllowed(edge, heuristicType) {
+    if (heuristicType === "manhattan" && edge.mode === "diagonal") return false;
+    return true;
+  }
+
   function runAStar(graph, startId, goalId, options = {}) {
+    const heuristicType = options.heuristic || "euclidean";
     const start = graph.getNode(startId);
     const goal = graph.getNode(goalId);
     const t0 = performance.now();
 
-    // 1. Logika Validasi Awal (Branching Awal)
-    if (!start || !goal || start.blocked || goal.blocked) {
-      return buildResult(false, [], [], 0, performance.now() - t0, 0, "Gagal", "Start/Goal tidak valid.");
+    if (!start || !goal) {
+      return buildResult(
+        false,
+        [],
+        [],
+        0,
+        performance.now() - t0,
+        0,
+        "Gagal menemukan jalur",
+        "Start node atau goal node tidak valid."
+      );
     }
 
-    // 2. Inisialisasi Struktur Data Pencarian
-    const open = [startId]; // Open List
+    if (start.blocked || goal.blocked) {
+      return buildResult(
+        false,
+        [],
+        [],
+        0,
+        performance.now() - t0,
+        0,
+        "Gagal menemukan jalur",
+        "Start atau goal berada pada area obstacle / area tertutup."
+      );
+    }
+
+    if (startId === goalId) {
+      return buildResult(
+        true,
+        [startId],
+        [startId],
+        0,
+        performance.now() - t0,
+        1,
+        "Berhasil",
+        "Start dan goal berada pada node yang sama."
+      );
+    }
+
+    const open = [startId];
     const openSet = new Set(open);
-    const closedSet = new Set(); // Closed List
+    const closedSet = new Set();
     const cameFrom = new Map();
     const gScore = new Map();
     const fScore = new Map();
@@ -24,9 +74,8 @@
     });
 
     gScore.set(startId, 0);
-    fScore.set(startId, heuristicDistance(start, goal, options.heuristic));
+    fScore.set(startId, heuristicDistance(start, goal, heuristicType));
 
-    // 3. CORE TRAVERSAL: Perulangan Utama Pencarian
     while (open.length > 0) {
       const currentId = extractLowest(open, fScore);
       openSet.delete(currentId);
@@ -35,17 +84,25 @@
       if (!current || current.blocked) continue;
       visitedOrder.push(currentId);
 
-      // Kondisi Berhenti (Goal Reached)
       if (currentId === goalId) {
         const path = reconstructPath(cameFrom, currentId);
-        return buildResult(true, path, visitedOrder, gScore.get(goalId), performance.now() - t0, closedSet.size, "Berhasil", "Jalur ditemukan.");
+        const elapsed = performance.now() - t0;
+        return buildResult(
+          true,
+          path,
+          visitedOrder,
+          gScore.get(goalId),
+          elapsed,
+          closedSet.size,
+          "Berhasil",
+          "Jalur berhasil ditemukan dari start ke goal."
+        );
       }
 
       closedSet.add(currentId);
 
-      // BRANCHING: Eksplorasi Tetangga
       for (const edge of current.edges) {
-        if (edge.disabled) continue; 
+        if (edge.disabled || !edgeAllowed(edge, heuristicType)) continue;
 
         const neighbor = graph.getNode(edge.to);
         if (!neighbor || neighbor.blocked || closedSet.has(edge.to)) continue;
@@ -54,7 +111,7 @@
         if (tentativeG < gScore.get(edge.to)) {
           cameFrom.set(edge.to, currentId);
           gScore.set(edge.to, tentativeG);
-          fScore.set(edge.to, tentativeG + heuristicDistance(neighbor, goal, options.heuristic));
+          fScore.set(edge.to, tentativeG + heuristicDistance(neighbor, goal, heuristicType));
 
           if (!openSet.has(edge.to)) {
             open.push(edge.to);
@@ -63,10 +120,44 @@
         }
       }
     }
-    return buildResult(false, [], visitedOrder, 0, performance.now() - t0, closedSet.size, "Gagal", "Tidak ada jalur.");
+
+    const elapsed = performance.now() - t0;
+
+    let reason = "Tidak ada jalur yang menghubungkan start ke goal.";
+    if (heuristicType === "manhattan") {
+      reason = "Jalur gagal ditemukan karena koneksi yang tersedia tidak memenuhi batas gerak 4 arah Manhattan, atau terhalang obstacle.";
+    } else {
+      reason = "Jalur gagal ditemukan karena node-node penghubung terputus oleh obstacle atau tidak ada koneksi yang mencapai goal.";
+    }
+
+    return buildResult(
+      false,
+      [],
+      visitedOrder,
+      0,
+      elapsed,
+      closedSet.size,
+      "Gagal menemukan jalur",
+      reason
+    );
   }
 
-  // Fungsi untuk merangkai jalur balik
+  function extractLowest(open, fScore) {
+    let bestIndex = 0;
+    let bestValue = fScore.get(open[0]) ?? Infinity;
+
+    for (let i = 1; i < open.length; i += 1) {
+      const score = fScore.get(open[i]) ?? Infinity;
+      if (score < bestValue) {
+        bestValue = score;
+        bestIndex = i;
+      }
+    }
+
+    const [bestId] = open.splice(bestIndex, 1);
+    return bestId;
+  }
+
   function reconstructPath(cameFrom, currentId) {
     const path = [currentId];
     while (cameFrom.has(currentId)) {
@@ -76,38 +167,22 @@
     return path;
   }
 
-  // 1. Fungsi Kalkulasi Heuristik (The Greedy Component)
-  // Menghitung perkiraan jarak tersisa dari node saat ini ke tujuan
-  function heuristicDistance(a, b, type) {
-    const dx = Math.abs(a.x - b.x);
-    const dy = Math.abs(a.y - b.y);
-
-    // Manhattan: Cocok untuk pergerakan grid 4 arah (horizontal/vertikal)
-    if (type === "manhattan") return dx + dy;
-    
-    // Chebyshev: Cocok jika pergerakan diagonal biayanya sama dengan lurus
-    if (type === "chebyshev") return Math.max(dx, dy);
-    
-    // Euclidean (Default): Jarak garis lurus nyata (Pythagoras)
-    return Math.sqrt(dx * dx + dy * dy); 
+  function buildResult(success, path, visitedOrder, pathCost, timeMs, expandedCount, message, reason) {
+    return {
+      success,
+      path,
+      visitedOrder,
+      pathCost,
+      timeMs,
+      expandedCount,
+      steps: path.length > 0 ? path.length - 1 : 0,
+      message,
+      reason,
+    };
   }
 
-  // 2. Fungsi Pengambilan Keputusan (Greedy Choice)
-  // Mengambil node dengan nilai f-score paling kecil dari Open List
-  function extractLowest(open, fScore) {
-    let bestIndex = 0;
-    let bestValue = fScore.get(open[0]) ?? Infinity;
-
-    for (let i = 1; i < open.length; i += 1) {
-      const score = fScore.get(open[i]) ?? Infinity;
-      // Selalu "rakus" (greedy) mengambil nilai terendah
-      if (score < bestValue) {
-        bestValue = score;
-        bestIndex = i;
-      }
-    }
-
-    // Mengeluarkan node terbaik dari array open list dan mengembalikannya
-    const [bestId] = open.splice(bestIndex, 1);
-    return bestId;
-  }
+  window.AStar = {
+    runAStar,
+    heuristicDistance,
+  };
+})();
