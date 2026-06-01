@@ -1,16 +1,18 @@
 (function () {
   "use strict";
 
+  // Menghitung jarak estimasi (Heuristic) dari node saat ini ke target
   function heuristicDistance(a, b, type) {
     const dx = Math.abs(a.x - b.x);
     const dy = Math.abs(a.y - b.y);
-
     if (type === "manhattan") return dx + dy;
     if (type === "chebyshev") return Math.max(dx, dy);
-    return Math.sqrt(dx * dx + dy * dy);
+    return Math.sqrt(dx * dx + dy * dy); // Euclidean
   }
 
+  // Optimasi keputusan untuk menyaring tipe jalur/koneksi yang valid
   function edgeAllowed(edge, heuristicType) {
+    // Jika menggunakan Manhattan, pergerakan diagonal tidak diizinkan
     if (heuristicType === "manhattan" && edge.mode === "diagonal") return false;
     return true;
   }
