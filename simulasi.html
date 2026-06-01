@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulasi A* Governors Island</title>
+  <title>Simulasi Peta Kota A*</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .map-shell {
+      overflow: hidden; 
+    }
+    #mapCanvas {
+      cursor: grab; 
+    }
+    #mapCanvas:active {
+      cursor: grabbing;
+    }
+  </style>
 </head>
 <body>
   <header class="hero hero-simple">
@@ -17,44 +28,46 @@
     <section class="panel controls">
       <h2>Kontrol Simulasi</h2>
 
-      <label for="gridSize">Ukuran Pengujian Internal</label>
+      <label for="gridSize">Ukuran Kota (Grid)</label>
       <select id="gridSize">
-        <option value="10">10 × 10</option>
-        <option value="20" selected>20 × 20</option>
-        <option value="30">30 × 30</option>
+        <option value="5" selected>5 × 5 Grid (Kota Kecil)</option>
+        <option value="8">8 × 8 Grid (Kota Sedang)</option>
+        <option value="12">12 × 12 Grid (Kota Besar)</option>
       </select>
 
-      <label for="heuristic">Heuristik</label>
+      <label for="heuristic">Heuristik Pencarian</label>
       <select id="heuristic">
         <option value="manhattan">Manhattan Distance</option>
         <option value="chebyshev">Chebyshev Distance</option>
         <option value="euclidean" selected>Euclidean Distance</option>
       </select>
 
+      <label for="courierType">Kendaraan Pengantar</label>
+      <select id="courierType">
+        <option value="van" selected>Mobil Box (Van)</option>
+        <option value="car">Mobil Sedan</option>
+        <option value="motorcycle">Motor</option>
+        <option value="bicycle">Sepeda</option>
+        <option value="person">Orang Berjalan</option>
+      </select>
+
       <div class="button-grid">
         <button id="runBtn" class="primary">Jalankan A*</button>
         <button id="resetBtn">Reset</button>
         <button id="randomNodeBtn">Acak Start & Goal</button>
-        <button id="randomObstacleBtn">Acak Obstacle</button>
+        <button id="randomObstacleBtn">Acak Rintangan (Blok)</button>
+        <button id="randomAllBtn" class="primary">Acak Jalan & Lokasi</button>
         <button id="compareBtn" class="wide">Bandingkan Heuristik</button>
       </div>
 
       <div class="legend-box">
         <div class="legend-item">
           <span class="dot start"></span>
-          <span>Start Node</span>
+          <span>Titik Awal (Start)</span>
         </div>
         <div class="legend-item">
           <span class="dot goal"></span>
-          <span>Goal Node</span>
-        </div>
-        <div class="legend-item">
-          <span class="dot visited"></span>
-          <span>Node diekspansi</span>
-        </div>
-        <div class="legend-item">
-          <span class="dot route"></span>
-          <span>Rute final A*</span>
+          <span>Titik Tujuan (Goal)</span>
         </div>
       </div>
     </section>
@@ -65,32 +78,27 @@
 
     <section class="panel metrics">
       <h2>Metrik Hasil</h2>
-
       <div class="metric-list">
         <div class="metric">
           <span>Waktu Eksekusi</span>
           <strong id="timeMetric">-</strong>
         </div>
-
         <div class="metric">
           <span>Node Diekspansi</span>
           <strong id="expandedMetric">-</strong>
         </div>
-
         <div class="metric">
           <span>Panjang Rute</span>
           <strong id="distanceMetric">-</strong>
         </div>
-
         <div class="metric">
           <span>Jumlah Langkah</span>
           <strong id="stepsMetric">-</strong>
         </div>
-
         <div class="metric metric-status">
           <span>Status</span>
           <div class="status-wrap">
-            <strong id="statusMetric">Belum dijalankan</strong>
+            <strong id="statusMetric" style="color: #1666d8;">Belum dijalankan</strong>
             <small id="reasonMetric" class="reason-text">-</small>
           </div>
         </div>

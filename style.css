@@ -94,7 +94,7 @@ h1 {
   vertical-align: -1px;
 }
 
-.dot.start { background: #18a85b; }
+.dot.start { background: #eab308; }
 .dot.goal { background: #d93232; }
 .dot.visited { background: #f59e0b; }
 .dot.route { background: #1769ff; }
